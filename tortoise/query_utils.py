@@ -51,8 +51,20 @@ def get_joins_for_related_field(
             or related_field.to_field_instance.model_field_name
         )
 
+        # TODO: maybe cache this somewhere in the model or related_field itself?
+        has_dup_backward_relations = False
+        for field_name, field in related_field.model._meta.fields_map.items():
+            if field_name in related_field.model._meta.backward_fk_fields \
+                    and field.related_model == related_field.related_model \
+                    and field != related_field:
+                has_dup_backward_relations = True
+                break
+
         if table == related_table:
             related_table = related_table.as_(f"{table.get_table_name()}__{related_field_name}")
+        elif has_dup_backward_relations:
+            related_table = related_table.as_(f"{related_table.get_table_name()}__{related_field_name}")
+
         required_joins.append(
             (
                 related_table,
