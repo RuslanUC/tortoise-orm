@@ -64,6 +64,8 @@ Contributors
 * Lance Moe ``@lancemoe``
 * Markus Beckschulte ``@markus-96``
 * Frederic Aoustin ``@fraoustin``
+* Ludwig Hähne ``@pankrat``
+* Christian Tanul ``@scriptogre``
 
 Special Thanks
 ==============

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import importlib
-import importlib.metadata as importlib_metadata
 import json
 import logging
 import os
@@ -34,8 +33,8 @@ from tortoise.utils import generate_schema_for_client
 
 
 class Tortoise:
-    apps: dict[str, dict[str, type["Model"]]] = {}
-    table_name_generator: Callable[[type["Model"]], str] | None = None
+    apps: dict[str, dict[str, type[Model]]] = {}
+    table_name_generator: Callable[[type[Model]], str] | None = None
     _inited: bool = False
 
     @classmethod
@@ -53,7 +52,7 @@ class Tortoise:
 
     @classmethod
     def describe_model(
-        cls, model: type["Model"], serializable: bool = True
+        cls, model: type[Model], serializable: bool = True
     ) -> dict[str, Any]:  # pragma: nocoverage
         """
         Describes the given list of models or ALL registered models.
@@ -79,7 +78,7 @@ class Tortoise:
 
     @classmethod
     def describe_models(
-        cls, models: list[type["Model"]] | None = None, serializable: bool = True
+        cls, models: list[type[Model]] | None = None, serializable: bool = True
     ) -> dict[str, dict[str, Any]]:
         """
         Describes the given list of models or ALL registered models.
@@ -115,7 +114,7 @@ class Tortoise:
 
     @classmethod
     def _init_relations(cls) -> None:
-        def get_related_model(related_app_name: str, related_model_name: str) -> type["Model"]:
+        def get_related_model(related_app_name: str, related_model_name: str) -> type[Model]:
             """
             Test, if app and model really exist. Throws a ConfigurationError with a hopefully
             helpful message. If successful, returns the requested model.
@@ -151,7 +150,7 @@ class Tortoise:
                 )
             return items[0], items[1]
 
-        def init_fk_o2o_field(model: type["Model"], field: str, is_o2o=False) -> None:
+        def init_fk_o2o_field(model: type[Model], field: str, is_o2o=False) -> None:
             fk_object = cast(
                 "OneToOneFieldInstance | ForeignKeyFieldInstance", model._meta.fields_map[field]
             )
@@ -172,7 +171,7 @@ class Tortoise:
                 fk_object.to_field = related_model._meta.pk_attr
                 related_field = related_model._meta.pk
             key_fk_object = deepcopy(related_field)
-            fk_object.to_field_instance = related_field  # type:ignore[arg-type,call-overload]
+            fk_object.to_field_instance = related_field
             fk_object.field_type = fk_object.to_field_instance.field_type
 
             key_field = f"{field}_id"
@@ -215,7 +214,7 @@ class Tortoise:
                         description=fk_object.description,
                     )
                 )
-                fk_relation.to_field_instance = fk_object.to_field_instance  # type:ignore
+                fk_relation.to_field_instance = fk_object.to_field_instance
                 related_model._meta.add_field(backward_relation_name, fk_relation)
             if is_o2o and fk_object.pk:
                 model._meta.pk_attr = key_field
@@ -284,7 +283,7 @@ class Tortoise:
                     related_model._meta.add_field(backward_relation_name, m2m_relation)
 
     @classmethod
-    def _discover_models(cls, models_path: ModuleType | str, app_label: str) -> list[type["Model"]]:
+    def _discover_models(cls, models_path: ModuleType | str, app_label: str) -> list[type[Model]]:
         if isinstance(models_path, ModuleType):
             module = models_path
         else:
@@ -365,10 +364,10 @@ class Tortoise:
         if extension in (".yml", ".yaml"):
             import yaml  # pylint: disable=C0415
 
-            with open(config_file, "r") as f:
+            with open(config_file) as f:
                 config = yaml.safe_load(f)
         elif extension == ".json":
-            with open(config_file, "r") as f:
+            with open(config_file) as f:
                 config = json.load(f)
         else:
             raise ConfigurationError(
@@ -399,7 +398,7 @@ class Tortoise:
         use_tz: bool = False,
         timezone: str = "UTC",
         routers: list[str | type] | None = None,
-        table_name_generator: Callable[[type["Model"]], str] | None = None,
+        table_name_generator: Callable[[type[Model]], str] | None = None,
     ) -> None:
         """
         Sets up Tortoise-ORM: loads apps and models, configures database connections but does not
@@ -481,8 +480,8 @@ class Tortoise:
             if not modules:
                 raise ConfigurationError('You must specify "db_url" and "modules" together')
             config = generate_config(db_url, modules)
-        else:
-            assert config is not None  # To improve type hints
+        elif config is None:
+            raise ConfigurationError('You must specify "config" or "config_file" or "db_url"')
 
         try:
             connections_config = config["connections"]
@@ -530,7 +529,7 @@ class Tortoise:
             str_connection_config = str_connection_config.replace(
                 password,
                 # Show one third of the password at beginning (may be better for debugging purposes)
-                f"{password[0:len(password) // 3]}***",
+                f"{password[0 : len(password) // 3]}***",
             )
         return str_connection_config
 
@@ -645,7 +644,7 @@ def run_async(coro: Coroutine) -> None:
         loop.run_until_complete(connections.close_all(discard=True))
 
 
-__version__ = importlib_metadata.version("tortoise-orm")
+__version__ = "0.25.1"
 
 __all__ = [
     "Model",

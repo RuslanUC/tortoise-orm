@@ -48,7 +48,16 @@ The related objects can be filtered:
 
     await team.events.filter(name='First')
 
-which will return you a QuerySet object with predefined filter
+which will return you a QuerySet object with predefined filter.
+
+You can also create related objects directly through the reverse ForeignKey relation:
+
+.. code-block:: python3
+
+    # Create a related object automatically setting the foreign key
+    new_event = await team.events.create(name='New Event')
+    # Equivalent to:
+    # new_event = await Event.create(name='New Event', team=team)
 
 QuerySet
 ========
@@ -277,6 +286,7 @@ PostgreSQL and SQLite also support ``iposix_regex``, which makes case insensive 
 
 
 .. code-block:: python3
+
     class DemoModel:
       demo_text = fields.TextField()
 

@@ -34,9 +34,11 @@ class Capabilities:
         DDL statement, and not as a separate statement.
     :param supports_transactions: Indicates that this DB supports transactions.
     :param support_for_update: Indicates that this DB supports SELECT ... FOR UPDATE SQL statement.
+    :param support_for_update_no_key: Indicates that this DB supports SELECT ... FOR NO KEY UPDATE SQL statement.
     :param support_index_hint: Support force index or use index.
     :param support_update_limit_order_by: support update/delete with limit and order by.
-    :param: support_for_posix_regex_queries: indicated if the db supports posix regex queries
+    :param support_for_posix_regex_queries: indicated if the db supports posix regex queries
+    :param support_json_attributes: indicated if the db supports accessing json attributes
     """
 
     def __init__(
@@ -50,11 +52,13 @@ class Capabilities:
         inline_comment: bool = False,
         supports_transactions: bool = True,
         support_for_update: bool = True,
+        support_for_no_key_update: bool = False,
         # Support force index or use index?
         support_index_hint: bool = False,
         # support update/delete with limit and order by
         support_update_limit_order_by: bool = True,
         support_for_posix_regex_queries: bool = False,
+        support_json_attributes: bool = False,
     ) -> None:
         super().__setattr__("_mutable", True)
 
@@ -64,9 +68,11 @@ class Capabilities:
         self.inline_comment = inline_comment
         self.supports_transactions = supports_transactions
         self.support_for_update = support_for_update
+        self.support_for_no_key_update = support_for_no_key_update
         self.support_index_hint = support_index_hint
         self.support_update_limit_order_by = support_update_limit_order_by
         self.support_for_posix_regex_queries = support_for_posix_regex_queries
+        self.support_json_attributes = support_json_attributes
         super().__setattr__("_mutable", False)
 
     def __setattr__(self, attr: str, value: Any) -> None:
@@ -106,7 +112,7 @@ class BaseDBAsyncClient(abc.ABC):
     """
 
     _connection: Any
-    _parent: "BaseDBAsyncClient"
+    _parent: BaseDBAsyncClient
     _pool: Any
     connection_name: str
     query_class: type[Query] = Query
@@ -154,14 +160,14 @@ class BaseDBAsyncClient(abc.ABC):
         """
         raise NotImplementedError()  # pragma: nocoverage
 
-    def acquire_connection(self) -> "ConnectionWrapper" | "PoolConnectionWrapper":
+    def acquire_connection(self) -> ConnectionWrapper | PoolConnectionWrapper:
         """
         Acquires a connection from the pool.
         Will return the current context connection if already in a transaction.
         """
         raise NotImplementedError()  # pragma: nocoverage
 
-    def _in_transaction(self) -> "TransactionContext":
+    def _in_transaction(self) -> TransactionContext:
         raise NotImplementedError()  # pragma: nocoverage
 
     async def execute_insert(self, query: str, values: list) -> Any:
