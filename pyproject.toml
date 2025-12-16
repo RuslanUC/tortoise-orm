@@ -8,7 +8,7 @@ keywords = ["sql", "mysql", "postgres", "psql", "sqlite", "aiosqlite", "asyncpg"
 dynamic = [ "version" ]
 requires-python = ">=3.9"
 dependencies = [
-    "pypika-tortoise (>=0.6.1,<1.0.0)",
+    "pypika-tortoise (>=0.6.3,<1.0.0)",
     "iso8601 (>=2.1.0,<3.0.0); python_version < '4.0'",
     "aiosqlite (>=0.16.0,<1.0.0)",
     "pytz",
@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Programming Language :: PL/SQL",
@@ -63,7 +64,6 @@ dev = [
     # Linter tools
     "mypy",
     "ruff",
-    "darglint",
     "pylint",
     "bandit",
     "codespell",
@@ -93,6 +93,7 @@ contrib=[
     # BlackSheep support
     "blacksheep>=2.0.8",
     "pytest-asyncio>=0.24.0",
+    "pyjwt (>=2.10.1,<3.0.0); python_version < '3.10'",
 ]
 test = [
     # Test tools
@@ -123,7 +124,6 @@ include = ["CHANGELOG.rst", "LICENSE", "README.rst"]
 [tool.mypy]
 pretty = true
 exclude = ["docs"]
-python_version = "3.9"
 ignore_missing_imports = true
 check_untyped_defs = true
 disallow_subclassing_any = true
