@@ -2,8 +2,11 @@ checkfiles = tortoise/ examples/ tests/ conftest.py
 py_warn = PYTHONDEVMODE=1
 pytest_opts = -n auto --cov=tortoise --cov-append --cov-branch --tb=native -q
 
+TORTOISE_MYSQL_HOST ?= 127.0.0.1
 TORTOISE_MYSQL_PASS ?= 123456
+TORTOISE_POSTGRES_HOST ?= 127.0.0.1
 TORTOISE_POSTGRES_PASS ?= 123456
+TORTOISE_MSSQL_HOST ?= 127.0.0.1
 TORTOISE_MSSQL_PASS ?= 123456
 TORTOISE_ORACLE_PASS ?= 123456
 
@@ -62,16 +65,16 @@ test_sqlite_regexp:
 	$(py_warn) TORTOISE_TEST_DB=sqlite://:memory:?install_regexp_functions=True uv run --frozen pytest --cov-report= $(pytest_opts)
 
 test_postgres_asyncpg:
-	uv run --frozen python -V | grep PyPy || $(py_warn) TORTOISE_TEST_DB="asyncpg://postgres:$(TORTOISE_POSTGRES_PASS)@127.0.0.1:5432/test_\{\}" uv run --frozen pytest $(pytest_opts) --cov-report=
+	uv run --frozen python -V | grep PyPy || $(py_warn) TORTOISE_TEST_DB="asyncpg://postgres:$(TORTOISE_POSTGRES_PASS)@$(TORTOISE_POSTGRES_HOST):5432/test_\{\}" uv run --frozen pytest $(pytest_opts) --cov-report=
 
 test_postgres_psycopg:
-	uv run --frozen python -V | grep PyPy || $(py_warn) TORTOISE_TEST_DB="psycopg://postgres:$(TORTOISE_POSTGRES_PASS)@127.0.0.1:5432/test_\{\}" uv run --frozen pytest $(pytest_opts) --cov-report=
+	uv run --frozen python -V | grep PyPy || $(py_warn) TORTOISE_TEST_DB="psycopg://postgres:$(TORTOISE_POSTGRES_PASS)@$(TORTOISE_POSTGRES_HOST):5432/test_\{\}" uv run --frozen pytest $(pytest_opts) --cov-report=
 
 test_mysql_myisam:
-	$(py_warn) TORTOISE_TEST_DB="mysql://root:$(TORTOISE_MYSQL_PASS)@127.0.0.1:3306/test_\{\}?storage_engine=MYISAM" uv run --frozen pytest $(pytest_opts) --cov-report=
+	$(py_warn) TORTOISE_TEST_DB="mysql://root:$(TORTOISE_MYSQL_PASS)@$(TORTOISE_MYSQL_HOST):3306/test_\{\}?storage_engine=MYISAM" uv run --frozen pytest $(pytest_opts) --cov-report=
 
 test_mysql:
-	$(py_warn) TORTOISE_TEST_DB="mysql://root:$(TORTOISE_MYSQL_PASS)@127.0.0.1:3306/test_\{\}" uv run --frozen pytest $(pytest_opts) --cov-report=
+	$(py_warn) TORTOISE_TEST_DB="mysql://root:$(TORTOISE_MYSQL_PASS)@$(TORTOISE_MYSQL_HOST):3306/test_\{\}" uv run --frozen pytest $(pytest_opts) --cov-report=
 
 test_mysql_asyncmy:
 	$(MAKE) deps_with_asyncmy
@@ -80,7 +83,7 @@ test_mysql_asyncmy:
 	$(MAKE) deps
 
 test_mssql:
-	$(py_warn) TORTOISE_TEST_DB="mssql://sa:$(TORTOISE_MSSQL_PASS)@127.0.0.1:1433/test_\{\}?driver=$(TORTOISE_MSSQL_DRIVER)&TrustServerCertificate=YES" uv run --frozen pytest $(pytest_opts) --cov-report=
+	$(py_warn) TORTOISE_TEST_DB="mssql://sa:$(TORTOISE_MSSQL_PASS)@$(TORTOISE_MSSQL_HOST):1433/test_\{\}?driver=$(TORTOISE_MSSQL_DRIVER)&TrustServerCertificate=YES" uv run --frozen pytest $(pytest_opts) --cov-report=
 
 test_oracle:
 	$(py_warn) TORTOISE_TEST_DB="oracle://SYSTEM:$(TORTOISE_ORACLE_PASS)@127.0.0.1:1521/test_\{\}?driver=$(TORTOISE_ORACLE_DRIVER)" uv run --frozen pytest $(pytest_opts) --cov-report=

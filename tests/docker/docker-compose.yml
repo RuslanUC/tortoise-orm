@@ -17,6 +17,7 @@ x-test-service: &test-service
     - TORTOISE_MSSQL_HOST="mssql"
     - TORTOISE_MSSQL_PASS="Abcd12345678"
     - TORTOISE_MSSQL_DRIVER="ODBC Driver 18 for SQL Server"
+    - UV_LINK_MODE=copy
   restart: no
 
 services:
