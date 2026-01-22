@@ -1,8 +1,13 @@
 x-test-service: &test-service
-  build: .
+  build:
+    context: .
+    additional_contexts:
+      - tortoise=../../
   pull_policy: build
   networks:
     - tortoise
+  volumes:
+    - 'uv_cache:/root/.cache/uv'
   environment:
     - TORTOISE_TEST_MODULES="tests.testmodels"
     - TORTOISE_MYSQL_HOST="mysql"
@@ -30,7 +35,7 @@ services:
       retries: 10
       start_period: 30s
   mysql:
-    image: mysql:9.6.0
+    image: mysql:8
     networks:
       - tortoise
     environment:
@@ -75,3 +80,7 @@ services:
 networks:
   tortoise:
     driver: bridge
+
+volumes:
+  uv_cache:
+    driver: local
