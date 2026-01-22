@@ -9,15 +9,15 @@ x-test-service: &test-service
   volumes:
     - 'uv_cache:/root/.cache/uv'
   environment:
-    - TORTOISE_TEST_MODULES="tests.testmodels"
-    - TORTOISE_MYSQL_HOST="mysql"
-    - TORTOISE_MYSQL_PASS="123456"
-    - TORTOISE_POSTGRES_HOST="postgres"
-    - TORTOISE_POSTGRES_PASS="123456"
-    - TORTOISE_MSSQL_HOST="mssql"
-    - TORTOISE_MSSQL_PASS="Abcd12345678"
-    - TORTOISE_MSSQL_DRIVER="ODBC Driver 18 for SQL Server"
-    - UV_LINK_MODE=copy
+    TORTOISE_TEST_MODULES: tests.testmodels
+    TORTOISE_MYSQL_HOST: mysql
+    TORTOISE_MYSQL_PASS: 123456
+    TORTOISE_POSTGRES_HOST: postgres
+    TORTOISE_POSTGRES_PASS: 123456
+    TORTOISE_MSSQL_HOST: mssql
+    TORTOISE_MSSQL_PASS: Abcd12345678
+    TORTOISE_MSSQL_DRIVER: ODBC Driver 18 for SQL Server
+    UV_LINK_MODE: copy
   restart: no
 
 services:

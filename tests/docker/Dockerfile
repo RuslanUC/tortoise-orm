@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/var/lib/apt/lists \
     && curl -sSL -o /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64 \
     && dpkg -i packages-microsoft-prod.deb \
     && apt update \
-    && ACCEPT_EULA=Y apt install --no-install-recommends -y make gcc build-essential python-is-python3 msodbcsql18 \
+    && ACCEPT_EULA=Y apt install --no-install-recommends -y make gcc build-essential python-is-python3 msodbcsql18 libgssapi-krb5-2 \
     && make deps options='--no-install-project' \
     && rm .venv/bin/python3 \
     && ln -s $(readlink .venv/bin/python) .venv/bin/python3 \
