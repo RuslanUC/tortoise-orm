@@ -1,0 +1,77 @@
+x-test-service: &test-service
+  build: .
+  pull_policy: build
+  networks:
+    - tortoise
+  environment:
+    - TORTOISE_TEST_MODULES="tests.testmodels"
+    - TORTOISE_MYSQL_HOST="mysql"
+    - TORTOISE_MYSQL_PASS="123456"
+    - TORTOISE_POSTGRES_HOST="postgres"
+    - TORTOISE_POSTGRES_PASS="123456"
+    - TORTOISE_MSSQL_HOST="mssql"
+    - TORTOISE_MSSQL_PASS="Abcd12345678"
+    - TORTOISE_MSSQL_DRIVER="ODBC Driver 18 for SQL Server"
+  restart: no
+
+services:
+  postgres:
+    image: postgres:14.20-trixie
+    networks:
+      - tortoise
+    environment:
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_USER=postgres
+    restart: no
+    healthcheck:
+      test: pg_isready -d db_prod
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+  mysql:
+    image: mysql:9.6.0
+    networks:
+      - tortoise
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    restart: no
+    healthcheck:
+      test: mysqladmin ping -h localhost
+      start_period: 10s
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-CU15-ubuntu-22.04
+    networks:
+      - tortoise
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Abcd12345678
+    restart: no
+    healthcheck:
+      test: "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Abcd12345678 -Q 'SELECT 1' -b -o /dev/null"
+      start_period: 10s
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  tortoise-orm-check:
+    <<: *test-service
+    command: make check
+  tortoise-orm-tests:
+    <<: *test-service
+    command: make testall
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      mssql:
+        condition: service_healthy
+      tortoise-orm-check:
+        condition: service_completed_successfully
+
+networks:
+  tortoise:
+    driver: bridge
