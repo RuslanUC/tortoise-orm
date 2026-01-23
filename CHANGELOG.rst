@@ -14,10 +14,22 @@ Changelog
 -------------------
 Fixed
 ^^^^^
-- Fix exception when creating aiosqlite connections on aiosqlite==0.22.0 (#2035)
+- Fix ``AttributeError`` when using ``tortoise-orm`` with Nuitka-compiled Python code (#2053)
+- Fix 'Self' in python standard library typing.py, but tortoise/model.py required it in 'typing_extensions' (#2051)
+
+Changed
+^^^^^
+- feat: foreignkey to model type (#2027)
 
 0.25
 ====
+
+0.25.3
+------
+Fixed
+^^^^^
+- Fix exception when creating aiosqlite connections on aiosqlite==0.22.0 (#2035)
+- Fix implicit anyio dependency introduced, but not declared (#2045)
 
 0.25.2
 ------
