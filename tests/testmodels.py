@@ -9,18 +9,17 @@ import re
 import uuid
 from decimal import Decimal
 from enum import Enum, IntEnum
-from typing import Union
 
-import pytz
 from pydantic import BaseModel, ConfigDict
 
 from tortoise import fields
-from tortoise.exceptions import ValidationError
+from tortoise.exceptions import NoValuesFetched, ValidationError
 from tortoise.fields import NO_ACTION
 from tortoise.indexes import Index
 from tortoise.manager import Manager
 from tortoise.models import Model
 from tortoise.queryset import QuerySet
+from tortoise.timezone import UTC
 from tortoise.validators import (
     CommaSeparatedIntegerListValidator,
     MaxValueValidator,
@@ -329,7 +328,7 @@ class FloatFields(Model):
     floatnum_null = fields.FloatField(null=True)
 
 
-def raise_if_not_dict_or_list(value: Union[dict, list]):  # NOQA:FA100
+def raise_if_not_dict_or_list(value: dict | list):
     if not isinstance(value, (dict, list)):
         raise ValidationError("Value must be a dict or list.")
 
@@ -341,13 +340,11 @@ class JSONFields(Model):
 
     id = fields.IntField(primary_key=True)
     data = fields.JSONField()  # type: ignore # Test cases where generics are not provided
-    data_null = fields.JSONField[Union[dict, list]](null=True)
+    data_null = fields.JSONField[dict | list](null=True)
     data_default = fields.JSONField[dict](default={"a": 1})
 
     # From Python 3.10 onwards, validator can be defined with staticmethod
-    data_validate = fields.JSONField[Union[dict, list]](
-        null=True, validators=[raise_if_not_dict_or_list]
-    )
+    data_validate = fields.JSONField[dict | list](null=True, validators=[raise_if_not_dict_or_list])
 
     # Test cases where generics are provided and the type is a pydantic base model
     data_pydantic = fields.JSONField[TestSchemaForJSONField](
@@ -626,7 +623,7 @@ class Employee(Model):
         """
         try:
             return len(self.team_members)
-        except AttributeError:
+        except (NoValuesFetched, AttributeError):
             return 0
 
     def not_annotated(self):
@@ -841,7 +838,7 @@ class DefaultModel(Model):
     char_default = fields.CharField(max_length=20, default="tortoise")
     date_default = fields.DateField(default=datetime.date(year=2020, month=5, day=21))
     datetime_default = fields.DatetimeField(
-        default=datetime.datetime(year=2020, month=5, day=20, tzinfo=pytz.utc)
+        default=datetime.datetime(year=2020, month=5, day=20, tzinfo=UTC)
     )
 
 
@@ -1067,3 +1064,17 @@ class ModelWithIndexes(Model):
             Index(fields=["f3"], name="model_with_indexes__f3"),
         ]
         unique_together = [("u1", "u2")]
+
+
+class Flavor(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=50)
+
+
+class Drink(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=100)
+    flavors = fields.ManyToManyField("models.Flavor", related_name="drinks", through="drink_flavor")
+    toppings = fields.ManyToManyField(
+        "models.Flavor", related_name="topping_drinks", through="drink_topping"
+    )

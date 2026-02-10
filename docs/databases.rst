@@ -30,6 +30,37 @@ If password contains special characters it need to be URL encoded:
     >>> urllib.parse.quote_plus("kx%jj5/g")
     'kx%25jj5%2Fg'
 
+.. note::
+
+    Passwords containing ``%`` followed by valid hex digits (e.g., ``foo%bar``)
+    may not be parsed correctly from a URL string, because the URL parser interprets
+    such sequences as percent-encoded characters. If your password contains ``%``,
+    either percent-encode it (as shown above) or use the dict-based configuration
+    format instead, which bypasses URL parsing entirely:
+
+    .. code-block:: python3
+
+        await Tortoise.init(config={
+            "connections": {
+                "default": {
+                    "engine": "tortoise.backends.asyncpg",
+                    "credentials": {
+                        "host": "127.0.0.1",
+                        "port": 5432,
+                        "user": "myuser",
+                        "password": "ADM[r$VIS]",
+                        "database": "mydb",
+                    }
+                }
+            },
+            "apps": {
+                "models": {
+                    "models": ["myapp.models"],
+                    "default_connection": "default",
+                }
+            },
+        })
+
 The supported ``DB_TYPE``:
 
 ``sqlite``:
@@ -47,6 +78,12 @@ The supported ``DB_TYPE``:
     Typically in the form of :samp:`mysql://myuser:mypass@db.host:3306/somedb`
 ``mssql``:
     Typically in the form of :samp:`mssql://myuser:mypass@db.host:1433/somedb?driver=the odbc driver`
+    You can also pass driver options such as :samp:`encrypt` and
+    :samp:`trust_server_certificate` (or their ODBC-cased equivalents
+    :samp:`Encrypt` and :samp:`TrustServerCertificate`) which will be appended
+    to the DSN. For example::
+
+        mssql://myuser:mypass@db.host:1433/somedb?driver=ODBC%20Driver%2018%20for%20SQL%20Server&encrypt=no&trust_server_certificate=yes
 
 Capabilities
 ============

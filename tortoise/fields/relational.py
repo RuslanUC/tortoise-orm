@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import AsyncGenerator, Generator, Iterator
-from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, overload
 
 from pypika_tortoise import Table
 
@@ -196,7 +196,7 @@ class ManyToManyRelation(ReverseRelation[MODEL]):
                 raise OperationalError(f"You should first call .save() on {instance_to_add}")
             pk_f = related_pk_formatting_func(instance_to_add.pk, instance_to_add)
             pks_f.append(pk_f)
-        through_table = Table(self.field.through)
+        through_table = Table(self.field.through, schema=self.field.through_schema)
         backward_key, forward_key = self.field.backward_key, self.field.forward_key
         backward_field, forward_field = through_table[backward_key], through_table[forward_key]
         select_query = (
@@ -241,7 +241,7 @@ class ManyToManyRelation(ReverseRelation[MODEL]):
         using_db: BaseDBAsyncClient | None = None,
     ) -> None:
         db = using_db or self.remote_model._meta.db
-        through_table = Table(self.field.through)
+        through_table = Table(self.field.through, schema=self.field.through_schema)
         pk_formatting_func = type(self.instance)._meta.pk.to_db_value
 
         condition = through_table[self.field.backward_key] == pk_formatting_func(
@@ -365,6 +365,12 @@ class OneToOneFieldInstance(ForeignKeyFieldInstance[MODEL]):
     ) -> None:
         super().__init__(model_name, related_name, on_delete, unique=True, **kwargs)
 
+    def deconstruct(self) -> tuple[str, list[Any], dict[str, Any]]:
+        path, args, kwargs = super().deconstruct()
+        # unique=True is set implicitly by OneToOneField.__init__
+        kwargs.pop("unique", None)
+        return path, args, kwargs
+
 
 class BackwardOneToOneRelation(BackwardFKRelation[MODEL]):
     pass
@@ -406,6 +412,7 @@ class ManyToManyFieldInstance(RelationalField[MODEL]):
         self.forward_key: str = forward_key
         self.backward_key: str = backward_key
         self.through: str = through  # type: ignore
+        self.through_schema: str | None = None
         self._generated: bool = False
         self.on_delete = on_delete
 
@@ -647,7 +654,7 @@ def ManyToManyField(
     )
 
 
-OneToOneNullableRelation = Optional[OneToOneFieldInstance[MODEL]]
+OneToOneNullableRelation = OneToOneFieldInstance[MODEL] | None
 """
 Type hint for the result of accessing the :func:`.OneToOneField` field in the model
 when obtained model can be nullable.
@@ -658,7 +665,7 @@ OneToOneRelation = OneToOneFieldInstance[MODEL]
 Type hint for the result of accessing the :func:`.OneToOneField` field in the model.
 """
 
-ForeignKeyNullableRelation = Optional[ForeignKeyFieldInstance[MODEL]]
+ForeignKeyNullableRelation = ForeignKeyFieldInstance[MODEL] | None
 """
 Type hint for the result of accessing the :func:`.ForeignKeyField` field in the model
 when obtained model can be nullable.
