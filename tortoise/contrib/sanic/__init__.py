@@ -17,7 +17,6 @@ def register_tortoise(
     db_url: str | None = None,
     modules: dict[str, Iterable[str | ModuleType]] | None = None,
     generate_schemas: bool = False,
-    _enable_global_fallback: bool = True,
 ) -> None:
     """
     Registers ``before_server_start`` and ``after_server_stop`` hooks to set-up and tear-down
@@ -82,13 +81,7 @@ def register_tortoise(
     """
 
     async def tortoise_init() -> None:
-        await Tortoise.init(
-            config=config,
-            config_file=config_file,
-            db_url=db_url,
-            modules=modules,
-            _enable_global_fallback=_enable_global_fallback,
-        )
+        await Tortoise.init(config=config, config_file=config_file, db_url=db_url, modules=modules)
         logger.info("Tortoise-ORM started, %s, %s", get_connections()._get_storage(), Tortoise.apps)  # pylint: disable=W0212
 
     if generate_schemas:

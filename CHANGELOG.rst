@@ -15,7 +15,6 @@ Changelog
 Fixed
 ^^^^^
 - Type checking of None assignment to nullable fields (#2089)
-- Fix set global fallback default in Sanic register_tortoise (#2090)
 
 
 1.0.0
