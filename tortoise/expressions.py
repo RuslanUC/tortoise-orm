@@ -418,10 +418,25 @@ class Q:
     def _resolve_regular_kwarg(
         self, resolve_context: ResolveContext, key: str, value: Any, table: Table
     ) -> QueryModifier:
-        if (
-            key not in resolve_context.model._meta.filters
-            and key.split("__")[0] in resolve_context.model._meta.fetch_fields
-        ):
+        current_meta = resolve_context.model._meta
+        is_fk = (
+            key not in current_meta.filters
+            and key.split("__")[0] in current_meta.fetch_fields
+        )
+        if is_fk:
+            keys = key.split("__", maxsplit=2)
+
+            new_key = f"{keys[0]}_{keys[1]}"
+            if new_key in current_meta.fields:
+                is_fk = False
+                key = "__".join([f"{keys[0]}_{keys[1]}", *keys[2:]])
+
+            # fk_model = current_meta.fields_map[keys[0]].model
+            # if len(keys) > 1 and keys[1] in fk_model._meta.fields_map and fk_model._meta.fields_map[keys[1]].pk:
+            #     is_fk = False
+            #     key = "__".join([f"{keys[0]}_{keys[1]}", *keys[2:]])
+
+        if is_fk:
             modifier = self._resolve_nested_filter(resolve_context, key, value, table)
         else:
             criterion, join = self._process_filter_kwarg(resolve_context.model, key, value, table)
