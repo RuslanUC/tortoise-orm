@@ -83,7 +83,7 @@ class MigrationRecorder:
     async def record_applied(self, app: str, name: str) -> None:
         applied_at = datetime.now(timezone.utc)
         if self._dialect:
-            values_or_placeholders = f"({self._placeholder(0)}, {self._placeholder(1)}, {self._placeholder(2)})"
+            values_or_placeholders = f"({self._placeholder(1)}, {self._placeholder(2)}, {self._placeholder(3)})"
         else:
             values_or_placeholders = f"('{self._escape(app)}', '{self._escape(name)}', '{applied_at.isoformat()}')"
 
