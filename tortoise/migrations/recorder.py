@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from tortoise import fields
+from tortoise import fields, BaseDBAsyncClient
 from tortoise.migrations.graph import MigrationKey
 from tortoise.models import Model
 
 
 class MigrationRecorder:
-    def __init__(self, connection, *, table_name: str = "tortoise_migrations") -> None:
+    def __init__(self, connection: BaseDBAsyncClient, *, table_name: str = "tortoise_migrations") -> None:
         self.connection = connection
         self.table_name = table_name
         self.model = self._make_model(table_name)
@@ -24,6 +24,13 @@ class MigrationRecorder:
         if self._dialect == "mssql":
             return f"[{name}]"
         return f'"{name}"'
+
+    def _placeholder(self, idx: int) -> str:
+        if self._dialect == "mysql":
+            return "%s"
+        elif self._dialect == "postgres":
+            return f"${idx}"
+        return "?"
 
     def _make_model(self, table_name: str) -> type[Model]:
         class MigrationRecord(Model):
@@ -74,13 +81,22 @@ class MigrationRecorder:
         return [MigrationKey(app_label=row["app"], name=row["name"]) for row in rows]
 
     async def record_applied(self, app: str, name: str) -> None:
-        applied_at = datetime.now(timezone.utc).isoformat()
+        applied_at = datetime.now(timezone.utc)
+        if self._dialect:
+            values_or_placeholders = f"({self._placeholder(0)}, {self._placeholder(1)}, {self._placeholder(2)})"
+        else:
+            values_or_placeholders = f"('{self._escape(app)}', '{self._escape(name)}', '{applied_at.isoformat()}')"
+
         query = (
             f"INSERT INTO {self._quote(self.table_name)} "  # nosec B608
             f"({self._quote('app')}, {self._quote('name')}, {self._quote('applied_at')}) "
-            f"VALUES ('{self._escape(app)}', '{self._escape(name)}', '{applied_at}')"
+            f"VALUES {values_or_placeholders}"
         )
-        await self.connection.execute_script(query)
+
+        if self._dialect:
+            await self.connection.execute_insert(query, [app, name, applied_at])
+        else:
+            await self.connection.execute_script(query)
 
     async def record_unapplied(self, app: str, name: str) -> None:
         query = (
