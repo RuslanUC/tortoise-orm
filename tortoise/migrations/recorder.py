@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from tortoise import fields
+from tortoise import fields, BaseDBAsyncClient
 from tortoise.migrations.graph import MigrationKey
 from tortoise.models import Model
+from pypika_tortoise import Query
 
 
 class MigrationRecorder:
-    def __init__(self, connection, *, table_name: str = "tortoise_migrations") -> None:
+    def __init__(self, connection: BaseDBAsyncClient, *, table_name: str = "tortoise_migrations") -> None:
         self.connection = connection
         self.table_name = table_name
         self.model = self._make_model(table_name)
@@ -74,13 +75,9 @@ class MigrationRecorder:
         return [MigrationKey(app_label=row["app"], name=row["name"]) for row in rows]
 
     async def record_applied(self, app: str, name: str) -> None:
-        applied_at = datetime.now(timezone.utc).isoformat()
-        query = (
-            f"INSERT INTO {self._quote(self.table_name)} "  # nosec B608
-            f"({self._quote('app')}, {self._quote('name')}, {self._quote('applied_at')}) "
-            f"VALUES ('{self._escape(app)}', '{self._escape(name)}', '{applied_at}')"
-        )
-        await self.connection.execute_script(query)
+        applied_at = datetime.now(timezone.utc)
+        query, params = self.connection.query_class.into(self.table_name).columns("app", "name", "applied_at").insert(app, name, applied_at).get_parameterized_sql()
+        await self.connection.execute_insert(query, params)
 
     async def record_unapplied(self, app: str, name: str) -> None:
         query = (
