@@ -74,7 +74,7 @@ class MigrationRecorder:
         return [MigrationKey(app_label=row["app"], name=row["name"]) for row in rows]
 
     async def record_applied(self, app: str, name: str) -> None:
-        applied_at = datetime.now(timezone.utc).isoformat()
+        applied_at = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
         query = (
             f"INSERT INTO {self._quote(self.table_name)} "  # nosec B608
             f"({self._quote('app')}, {self._quote('name')}, {self._quote('applied_at')}) "
